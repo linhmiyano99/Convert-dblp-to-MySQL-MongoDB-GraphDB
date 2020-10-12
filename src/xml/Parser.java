@@ -246,13 +246,14 @@ public class Parser {
 				           .append("year", paper.year)
 				           .append("conference", paper.conference)
 				           .append("paper_key", paper.key));
-				    listPapers.add(documentPaper);
+				dbPaper.insert(documentPaper);
+
 
 
 				for (String author: paper.authors) {
 					DBObject documentAuthor = new BasicDBObject("author", new BasicDBObject("name", author)
 				               .append("paper_key", paper.key));
-				    listAuthors.add(documentAuthor);
+					dbAuthor.insert(documentAuthor);
 
 					
 				}
@@ -260,7 +261,7 @@ public class Parser {
 					if (!cited.equals("...")) {
 						DBObject documentCitation = new BasicDBObject("citation", new BasicDBObject("paper_cite_key", paper.key)
 				                   .append("paper_cited_key", cited));
-						listCitations.add(documentCitation);
+						dbCitation.insert(documentCitation);
 					}
 				}
 			} else if (Element.getElement(rawName) == Element.PROCEEDING) {
@@ -275,52 +276,40 @@ public class Parser {
 				DBObject documentConferences = new BasicDBObject("citation", new BasicDBObject("conf_key", conf.key)
 				           .append("name",  conf.name)
 				           .append("detail", conf.detail));
-				listConferences.add(documentConferences);
+				dbConference.insert(documentConferences);
+
 			}
-			if (line % 10000 == 0) {
-					try{
-				dbPaper.insert(listPapers);
-				listPapers.clear();
-					}
-					catch(Exception e) {
-						e.printStackTrace();
-
-					}
-				
-					try{
-					dbAuthor.insert(listAuthors);
-					listAuthors.clear();
-
-					}
-					catch(Exception e) {
-						e.printStackTrace();
-
-					}
-			
-					try{
-
-					dbCitation.insert(listCitations);
-					listCitations.clear();
-
-				}
-				catch(Exception e) {
-					e.printStackTrace();
-
-				}
-				
-					try{
-
-					dbConference.insert(listConferences);
-					listConferences.clear();
-
-				}
-				catch(Exception e) {
-					e.printStackTrace();
-
-				}
-			
-				
-			}
+			/*
+			 * if (line % 1000 == 0) { try{ dbPaper.insert(listPapers); } catch(Exception e)
+			 * { e.printStackTrace();
+			 * 
+			 * }
+			 * 
+			 * try{ dbAuthor.insert(listAuthors);
+			 * 
+			 * } catch(Exception e) { e.printStackTrace();
+			 * 
+			 * }
+			 * 
+			 * try{
+			 * 
+			 * dbCitation.insert(listCitations);
+			 * 
+			 * } catch(Exception e) { e.printStackTrace();
+			 * 
+			 * }
+			 * 
+			 * try{
+			 * 
+			 * dbConference.insert(listConferences);
+			 * 
+			 * } catch(Exception e) { e.printStackTrace();
+			 * 
+			 * }
+			 * 
+			 * 
+			 * }
+			 */
 		
 		}
 
