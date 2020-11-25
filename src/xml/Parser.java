@@ -268,12 +268,12 @@ public class Parser {
 						
 					}
 					for (int i = 0; i < paper.authors.size(); i++) {
-						for(int j = i+1; j < paper.authors.size(); j++) {
+						for(int j = i + 1; j < paper.authors.size(); j++) {
 							int m = j, n = i;
 							session.writeTransaction(
 									tx -> tx.run("MATCH (a:author),(b:author)"
 											+ "WHERE a.name = \'" + getNeoSyntax(paper.authors.get(n)) + "\' AND b.name = \'" + getNeoSyntax(paper.authors.get(m))
-											+ "\' MERGE (a)-[r:CO_AUTHOR]->(b)"
+											+ "\' MERGE (a)-[r:CO_AUTHOR]-(b)"
 											+ "RETURN type(r)"));
 						}
 					}
