@@ -264,6 +264,11 @@ public class Parser {
 						session.writeTransaction(
 						tx -> tx.run("MERGE (n:author {name: \'"+getNeoSyntax(author)
 						+"\'})"));
+						session.writeTransaction(
+								tx -> tx.run("MATCH (a:author),(b:paper)"
+										+ " WHERE a.name = \'" +getNeoSyntax(author) + "\' AND b.paper_key =\'"+getNeoSyntax(paper.key)
+										+ "\' MERGE (a)-[r:AUTHOR]->(b)"
+										+ "RETURN type(r)"));
 						
 						
 					}
@@ -273,7 +278,7 @@ public class Parser {
 							session.writeTransaction(
 									tx -> tx.run("MATCH (a:author),(b:author)"
 											+ "WHERE a.name = \'" + getNeoSyntax(paper.authors.get(n)) + "\' AND b.name = \'" + getNeoSyntax(paper.authors.get(m))
-											+ "\' MERGE (a)-[r:CO_AUTHOR]-(b)"
+											+ "\' MERGE (a)-[r:CO_AUTHOR]->(b)"
 											+ "RETURN type(r)"));
 						}
 					}
