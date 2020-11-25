@@ -76,14 +76,19 @@ public class Parser {
 				String str = new String(ch, start, length).trim();
 				if (curElement == Paper.AUTHOR) {
 					author.append(str);
+					System.out.println("AUTHOR:" + line);
 				} else if (curElement == Paper.CITE) {
 					paper.citations.add(str);
+					System.out.println("CITE:" + line);
 				} else if (curElement == Paper.CONFERENCE) {
 					paper.conference = str;
+					System.out.println("CONFERENCE:" + line);
 				} else if (curElement == Paper.TITLE) {
 					paper.title += str;
+					System.out.println("TITLE:" + line);
 				} else if (curElement == Paper.YEAR) {
 					paper.year = Integer.parseInt(str);
+					System.out.println("YEAR:" + line);
 				}
 			} else if (ancestor == Element.PROCEEDING) {
 				String str = new String(ch, start, length).trim();
@@ -163,7 +168,6 @@ public class Parser {
 					stmt_author.executeBatch();
 					stmt_cite.executeBatch();
 					conn.commit();
-					 System.out.println("Processing " + line);
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
 				}
@@ -243,43 +247,58 @@ public class Parser {
 						errors++;
 						return;
 					}
-					if(paper.title.contains("\"")) {
-						paper.title = paper.title.replace("\"", "\\\"");
-					}
+				
+
 				    session.writeTransaction(
-			        		tx -> tx.run("MERGE (a:paper {title: \""+ paper.title 
-			        				+ "\", year: "+paper.year
-			        				+", conference: \""+paper.conference 
-			        				+"\",paper_key: \""+paper.key+"\"})"));
+			        		tx -> tx.run("MERGE (n:paper {title: \'"+ getNeoSyntax(paper.title) 
+			        				+ "\', year: "+paper.year
+			        				+", conference: \'"+getNeoSyntax(paper.conference) 
+			        				+"\',paper_key: \'"+getNeoSyntax(paper.key)+"\'})"));
 			        
 
 
 
 					for (String author: paper.authors) {
+					
+						  
 						session.writeTransaction(
-				        		tx -> tx.run("MERGE (b:author {name: \""+author+"\",paper_key: \""+paper.key+"\"})"));
-				       
-
+						tx -> tx.run("MERGE (n:author {name: \'"+getNeoSyntax(author)
+						+"\'})"));
 						
+						
+					}
+					for (int i = 0; i < paper.authors.size(); i++) {
+						for(int j = i+1; j < paper.authors.size(); j++) {
+							int m = j, n = i;
+							session.writeTransaction(
+									tx -> tx.run("MATCH (a:author),(b:author)"
+											+ "WHERE a.name = \'" + getNeoSyntax(paper.authors.get(n)) + "\' AND b.name = \'" + getNeoSyntax(paper.authors.get(m))
+											+ "\' MERGE (a)-[r:CO_AUTHOR]->(b)"
+											+ "RETURN type(r)"));
+						}
+					}
+					if(paper.citations.size() >0) {
+					System.out.println("paper.citations:" + paper.citations);
 					}
 
 					for (String cited: paper.citations) {
 						if (!cited.equals("...")) {
 							 session.writeTransaction(
-						        		tx -> tx.run("MERGE (c:citation {paper_cite_key: \""+paper.key+"\",paper_cited_key: \""+cited+"\"})"));
+						        		tx -> tx.run(
+						        				"MERGE (n:citation {paper_cite_key: \'"+getNeoSyntax(paper.key)
+						        		+"\',paper_cited_key: \'"+getNeoSyntax(cited)+"\'})"));
 						}
 					}
 				} else if (Element.getElement(rawName) == Element.PROCEEDING) {
 					ancestor = -1;
 					if (conf.name.equals(""))
 						conf.name = conf.detail;
-					if (conf.key.equals("") || conf.name.equals("")
-							|| conf.detail.equals("")) {
-						System.out.println("Line:" + line);
-						System.exit(0);
-					}
+
 					session.writeTransaction(
-			        		tx -> tx.run("MERGE (d:conference {conf_key: \""+conf.key+"\",name: \""+conf.name+"\",detail: \""+conf.detail+"\"})"));
+			        		tx -> tx.run(
+			        				"MERGE (n:conference {conf_key: \'"+getNeoSyntax(conf.key)
+			        		+"\',name: \'"+getNeoSyntax(conf.name)
+			        		+"\',detail: \'"+getNeoSyntax(conf.detail)+"\'})"));
 
 				}
 				session.close();
@@ -539,12 +558,6 @@ public class Parser {
 		try {
 		System.out.println("Parsing...");
 		driver = (Driver) DBConnection.getNeo4jConnection();
-		//title,year,conference,paper_key
-		//author(name,paper_key)
-		//citation(paper_cite_key,paper_cited_key)
-		//conference(conf_key,name,detail)
-		
-    
        
 		SAXParserFactory parserFactory = SAXParserFactory.newInstance();
 		SAXParser parser = parserFactory.newSAXParser();
@@ -563,12 +576,25 @@ public class Parser {
 				+ e.getMessage());
 	}
 	    }
-	
+	public static String getNeoSyntax(String input) {
+		String value = input;
+		if(input.contains("\"")) {
+			value = input.replace("\"", "\\\"");
+		}
+		
+		if(input.contains("\'")) {
+			value = input.replace("\'", "\\\' ");
+		}
+		if(input.contains("\\")) {
+			value = input.replace("\\", "\\\\");
+		}
+		return value;
+	}
 	
 	public static void main(String[] args) throws SQLException, ClassNotFoundException{
 		Long start = System.currentTimeMillis();
 		System.out.println(start);
-		Parser p = new Parser("C:/Users/17520/Documents/GitHub/DBLP-PARSER/dblp.xml", MYSQL);
+		Parser p = new Parser("C:/Users/17520/Documents/GitHub/DBLP-PARSER/dblp.xml", NEO4J);
 		Long end = System.currentTimeMillis();
 		System.out.println("Used:" + (end - start) / 1000 + "second");
 		
