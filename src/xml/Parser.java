@@ -281,6 +281,7 @@ public class Parser {
 											+ "\' MERGE (a)-[r:CO_AUTHOR]->(b)"
 											+ "RETURN type(r)"));
 						}
+			
 					}
 					if(paper.citations.size() >0) {
 					System.out.println("paper.citations:" + paper.citations);
@@ -288,10 +289,17 @@ public class Parser {
 
 					for (String cited: paper.citations) {
 						if (!cited.equals("...")) {
+							/*
+							 * session.writeTransaction( tx -> tx.run(
+							 * "MERGE (n:citation {paper_cite_key: \'"+getNeoSyntax(paper.key)
+							 * +"\',paper_cited_key: \'"+getNeoSyntax(cited)+"\'})"));
+							 */
 							 session.writeTransaction(
-						        		tx -> tx.run(
-						        				"MERGE (n:citation {paper_cite_key: \'"+getNeoSyntax(paper.key)
-						        		+"\',paper_cited_key: \'"+getNeoSyntax(cited)+"\'})"));
+										tx -> tx.run("MATCH (a:paper),(b:paper)"
+												+ "WHERE a.paper_key = \'" +getNeoSyntax(paper.key)
+												+ "\' AND b.paper_key = \'" + getNeoSyntax(cited)
+												+ "\' MERGE (a)-[r:CITATION]->(b)"
+												+ "RETURN type(r)"));
 						}
 					}
 				} else if (Element.getElement(rawName) == Element.PROCEEDING) {
@@ -588,7 +596,7 @@ public class Parser {
 		}
 		
 		if(input.contains("\'")) {
-			value = input.replace("\'", "\\\' ");
+			value = input.replace("\'", "\\\'");
 		}
 		if(input.contains("\\")) {
 			value = input.replace("\\", "\\\\");
@@ -602,6 +610,5 @@ public class Parser {
 		Parser p = new Parser("C:/Users/17520/Documents/GitHub/DBLP-PARSER/dblp.xml", NEO4J);
 		Long end = System.currentTimeMillis();
 		System.out.println("Used:" + (end - start) / 1000 + "second");
-		
 	}
 }
