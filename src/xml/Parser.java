@@ -23,10 +23,10 @@ public class Parser {
 	MongoClient mongoClient;
 	DB db;
 	DBCollection dbPaper;
-    DBCollection dbAuthor;
-    DBCollection dbCitation;
-    DBCollection dbConference; 
-    Driver driver;
+    	DBCollection dbAuthor;
+    	DBCollection dbCitation;
+    	DBCollection dbConference; 
+    	Driver driver;
 	private int curElement = -1;
 	private int ancestor = -1;
 	private Paper paper;
